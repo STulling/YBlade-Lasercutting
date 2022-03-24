@@ -3,23 +3,16 @@
 Simple script that takes [QBlade](https://http://www.q-blade.org/) blade description and
 constructs the blade as lasercutting paths:
 
-![result.png](result.png)
+<img src="./bladeExample2/ribs.svg" style="width:100%;height:600px;">
+
+<img src="./bladeExample2/beam.svg" style="width:100%;height:100px;">
 
 ## Usage
 
 First, use QBlade to design your blade. Then export the blade table and profile
-data. Then adjust some variables in the script and run it.
+data. Then adjust some variables in the script and run it. See the example in [bladeExample2](bladeExample2).
+Blades with multiple profiles are supported.
 
-See example input files in [bladeExample](bladeExample).
+You probably need to do nesting yourself using a tool like [DeepNest](https://deepnest.io/)
 
-Two bodies are generated under the root component:
-
-- the first body is the outside shell of the blade. It is created by a sweep
-  operation, so the body is completely smooth.
-- then there is the infill body (you can subtract from the shell). This body is
-  created by loft operations and to reduce computational complexity, it is
-  simplified.
-
-## Known limitations
-
-Currently, only blades with a single profile are supported.
+//TODO: improve user interaction
