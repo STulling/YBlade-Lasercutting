@@ -1,15 +1,14 @@
-# YBlade - Import QBlade blades into Fusion 360
+# YBlade (Lasercutting) - QBlade to lasercutting svg
 
-Simple script for Fusion 360 that takes [QBlade](https://http://www.q-blade.org/) blade description and
-constructs the blade:
+Simple script that takes [QBlade](https://http://www.q-blade.org/) blade description and
+constructs the blade as lasercutting paths:
 
 ![result.png](result.png)
 
 ## Usage
 
 First, use QBlade to design your blade. Then export the blade table and profile
-data. Install this script and then run it. It will ask to enter the blade table
-and profile file.
+data. Then adjust some variables in the script and run it.
 
 See example input files in [bladeExample](bladeExample).
 
