@@ -75,8 +75,8 @@ def drawProfile(dwg, profileData, chordLength, twist, threadAxisOffset, zoffset,
     spline = dwg.g(id=id, stroke='green', fill='none')
     points = [(vec[0], vec[1]) for vec in pointSet]
     spline.add(dwg.polyline(points + [points[0]]))
-    drawTally(dwg, spline, id, 0.015*chordLength, twist, center=(-0.3*chordLength, -0.04*chordLength))
-    vent_hole = dwg.rect(insert=(-0.25*chordLength, -0.01*chordLength), size=(0.02*chordLength, 0.02*chordLength), fill='none', stroke='green')
+    drawTally(dwg, spline, id, 0.02*chordLength, twist, center=(-0.28*chordLength, -0.04*chordLength))
+    vent_hole = dwg.rect(insert=(0.33*chordLength, -0.01*chordLength), size=(0.02*chordLength, 0.02*chordLength), fill='none', stroke='green')
     vent_hole.rotate(twist)
     spline.add(vent_hole)
     spline.add(dwg.rect(insert=(-BEAM_WIDTH/2 + CONNECTION_SIZE, -BEAM_HEIGHT/2), size=(BEAM_WIDTH, BEAM_HEIGHT), fill='none', stroke='green'))
@@ -86,18 +86,23 @@ def drawProfile(dwg, profileData, chordLength, twist, threadAxisOffset, zoffset,
 def drawTally(dwg, spline, n, size, twist, center=[0, 0]):
     if n == 0: return
     x = 0
-    last = (0, 0)
+    y = 0
     lines = np.array([[0, 0], [1, 0], [1, 1], [0, 1], [0, 0], [1, 1]])
+    amount = -1
     while True:
         curr = min(n, 5)
         if curr == 0: break
+        amount+=1
         currLines = lines[:curr+1]
-        points = (currLines*size + center + [x, 0]).tolist()
+        points = (currLines*size + center + [x, y]).tolist()
         tally = dwg.polyline(points=points, stroke='red', stroke_width=0.2)
         tally.rotate(twist)
         spline.add(tally)
         n -= curr
-        x += 1.3 * size
+        x += 1.4 * size
+        if amount % 4 == 3:
+            x = 0
+            y += 1.4 * size
     return
 
 def main(): 
