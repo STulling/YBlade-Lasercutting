@@ -1,8 +1,4 @@
-#Author-Jan Mrázek
-#Description-
-
 import math
-import sys 
 from copy import deepcopy
 import numpy as np
 from scipy.spatial.transform import Rotation as R
@@ -15,7 +11,6 @@ RIB_WIDTH = 4
 BEAM_HEIGHT = 6
 BEAM_WIDTH = 40
 CONNECTION_SIZE = 5
-RIB_SPACING = 50
 HANDLE = 140
 POSTFIX = 10
 
@@ -77,14 +72,14 @@ def profilePoints(profileData, chordLength, twist, threadAxisOffset, zoffset):
 
 def drawProfile(dwg, profileData, chordLength, twist, threadAxisOffset, zoffset, id):
     pointSet = profilePoints(profileData, chordLength, twist, threadAxisOffset, zoffset)
-    spline = dwg.g(id=id, stroke='green', fill='none', stroke_width=0.1)
+    spline = dwg.g(id=id, stroke='green', fill='none')
     points = [(vec[0], vec[1]) for vec in pointSet]
     spline.add(dwg.polyline(points + [points[0]]))
     drawTally(dwg, spline, id, 0.015*chordLength, twist, center=(-0.3*chordLength, -0.04*chordLength))
-    vent_hole = dwg.rect(insert=(-0.25*chordLength, -0.01*chordLength), size=(0.02*chordLength, 0.02*chordLength), fill='none', stroke='green', stroke_width=0.1)
+    vent_hole = dwg.rect(insert=(-0.25*chordLength, -0.01*chordLength), size=(0.02*chordLength, 0.02*chordLength), fill='none', stroke='green')
     vent_hole.rotate(twist)
     spline.add(vent_hole)
-    spline.add(dwg.rect(insert=(-BEAM_WIDTH/2 + CONNECTION_SIZE, -BEAM_HEIGHT/2), size=(BEAM_WIDTH, BEAM_HEIGHT), fill='none', stroke='green', stroke_width=0.1))
+    spline.add(dwg.rect(insert=(-BEAM_WIDTH/2 + CONNECTION_SIZE, -BEAM_HEIGHT/2), size=(BEAM_WIDTH, BEAM_HEIGHT), fill='none', stroke='green'))
     return spline
 
 
@@ -98,7 +93,7 @@ def drawTally(dwg, spline, n, size, twist, center=[0, 0]):
         if curr == 0: break
         currLines = lines[:curr+1]
         points = (currLines*size + center + [x, 0]).tolist()
-        tally = dwg.polyline(points=points, stroke='red')
+        tally = dwg.polyline(points=points, stroke='red', stroke_width=0.2)
         tally.rotate(twist)
         spline.add(tally)
         n -= curr
@@ -122,12 +117,15 @@ def main():
 
     prevLen = -1000
     prevTwist = -1000
+    j = -200
     g = dwg.g(id='profiles')
     for i, b in enumerate(blade):
+        if i % 5 == 0:
+            j += 300
         if abs(b.len - prevLen) < 1 and abs(b.twist - prevTwist) < 1 and i != len(blade) - 1:
             continue
         spline = drawProfile(dwg, profiles[b.profile], b.len, b.twist, b.thread, b.offset, i)
-        spline.translate(0, i * 100)
+        spline.translate(j, i % 5 * 100)
         g.add(spline)
     g.translate(100, 100)
     dwg.add(g)
@@ -137,13 +135,13 @@ def main():
     dwg = svgwrite.Drawing('beam.svg', profile='tiny')
     g = dwg.g(id='beam')
     points = [(0, 0)]
-    for i in range(len(blade)):
-        points.append((HANDLE + i * RIB_SPACING - RIB_WIDTH/2, 0))
-        points.append((HANDLE + i * RIB_SPACING - RIB_WIDTH/2, CONNECTION_SIZE))
-        points.append((HANDLE + i * RIB_SPACING + RIB_WIDTH/2, CONNECTION_SIZE))
-        points.append((HANDLE + i * RIB_SPACING + RIB_WIDTH/2, 0))
-    points.append((HANDLE + (len(blade)-1) * RIB_SPACING + POSTFIX, 0))
-    points.append((HANDLE + (len(blade)-1) * RIB_SPACING + POSTFIX, BEAM_WIDTH))
+    for b in blade:
+        points.append((HANDLE + b.pos - RIB_WIDTH/2, 0))
+        points.append((HANDLE + b.pos - RIB_WIDTH/2, CONNECTION_SIZE))
+        points.append((HANDLE + b.pos + RIB_WIDTH/2, CONNECTION_SIZE))
+        points.append((HANDLE + b.pos + RIB_WIDTH/2, 0))
+    points.append((HANDLE + blade[-1].pos + POSTFIX, 0))
+    points.append((HANDLE + blade[-1].pos + POSTFIX, BEAM_WIDTH))
     points.append((0, BEAM_WIDTH))
     points.append((0, 0))
     g.add(dwg.polyline(points, fill='none', stroke='green', stroke_width=1))
