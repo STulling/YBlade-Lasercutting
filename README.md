@@ -1,7 +1,7 @@
 # YBlade (Lasercutting) - QBlade to lasercutting svg
 
 Simple script that takes [QBlade](https://http://www.q-blade.org/) blade description and
-constructs the blade as lasercutting paths:
+constructs the blade as lasercutting paths in svg. It includes tally marks to keep track of the order of the blades (since svg text to paths was being wonky) and vent holes to prevent balooning. It also includes a kerf testing print that will help with figuring out which kerf offset you would want to use for a snug fit.
 
 <img src="./bladeExample2/ribs.svg" style="width:100%;height:600px;">
 
