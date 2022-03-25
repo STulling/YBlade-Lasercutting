@@ -70,7 +70,7 @@ def profilePoints(profileData, chordLength, twist, threadAxisOffset, zoffset):
         pointSet.append(p)
     return pointSet
 
-def drawProfile(dwg, profileData, chordLength, twist, threadAxisOffset, zoffset, id):
+def drawProfile(dwg, profileData, chordLength, twist, threadAxisOffset, zoffset, id, kerf=0):
     pointSet = profilePoints(profileData, chordLength, twist, threadAxisOffset, zoffset)
     spline = dwg.g(id=id, stroke='green', fill='none')
     points = [(vec[0], vec[1]) for vec in pointSet]
@@ -79,7 +79,7 @@ def drawProfile(dwg, profileData, chordLength, twist, threadAxisOffset, zoffset,
     vent_hole = dwg.rect(insert=(0.33*chordLength, -0.01*chordLength), size=(0.02*chordLength, 0.02*chordLength), fill='none', stroke='green')
     vent_hole.rotate(twist)
     spline.add(vent_hole)
-    spline.add(dwg.rect(insert=(-BEAM_WIDTH/2 + CONNECTION_SIZE, -BEAM_HEIGHT/2), size=(BEAM_WIDTH, BEAM_HEIGHT), fill='none', stroke='green'))
+    spline.add(dwg.rect(insert=(-BEAM_WIDTH/2 + CONNECTION_SIZE - 0.5*kerf, -BEAM_HEIGHT/2 - 0.5*kerf), size=(BEAM_WIDTH + kerf, BEAM_HEIGHT + kerf), fill='none', stroke='green'))
     return spline
 
 
@@ -159,6 +159,43 @@ def main():
         g.add(obj)
     dwg.add(g)
     dwg.save()
+
+    # Kerf tests
+    dwg = svgwrite.Drawing('kerftest.svg', profile='tiny')
+    g = dwg.g(id='kerftest')
+    b = blade[-1]
+    for i in range(11):
+        kerf = i * 0.1 - 0.5
+        spline = drawProfile(dwg, profiles[b.profile], b.len, b.twist, b.thread, b.offset, i, kerf=kerf)
+        spline.translate(40, 40 + i * 20)
+        g.add(spline)
+    dwg.add(g)
+    dwg.save()
+
+    # Test Beam
+    dwg = svgwrite.Drawing('testbeam.svg', profile='tiny')
+    g = dwg.g(id='beam')
+    points = [(0, 0)]
+    points.append((100 - RIB_WIDTH/2, 0))
+    points.append((100 - RIB_WIDTH/2, CONNECTION_SIZE))
+    points.append((100 + RIB_WIDTH/2, CONNECTION_SIZE))
+    points.append((100 + RIB_WIDTH/2, 0))
+    points.append((120, 0))
+    points.append((120, BEAM_WIDTH))
+    points.append((0, BEAM_WIDTH))
+    points.append((0, 0))
+    g.add(dwg.polyline(points, fill='none', stroke='green', stroke_width=1))
+
+    # Add one connector
+    points = [(0, 0), (RIB_WIDTH + 6, 0), (RIB_WIDTH + 6, CONNECTION_SIZE), (3, CONNECTION_SIZE), (3, CONNECTION_SIZE + 3), (0, CONNECTION_SIZE + 3), (0, 0)]
+    obj = dwg.polyline(points, fill='none', stroke='green', stroke_width=1)
+    obj.translate(0, BEAM_WIDTH + 10)
+    g.add(obj)
+    dwg.add(g)
+    dwg.save()
+
+
+
 
 if __name__ == '__main__':
     main()
