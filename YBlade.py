@@ -8,7 +8,7 @@ handlers = []
 
 # Values here in mm
 RIB_WIDTH = 4
-BEAM_HEIGHT = 6
+BEAM_HEIGHT = 9
 BEAM_WIDTH = 40
 CONNECTION_SIZE = 5
 HANDLE = 140
