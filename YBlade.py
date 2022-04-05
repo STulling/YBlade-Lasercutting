@@ -7,12 +7,13 @@ import svgwrite
 handlers = []
 
 # Values here in mm
-RIB_WIDTH = 4
 BEAM_HEIGHT = 9
+RIB_WIDTH = 3.5
 BEAM_WIDTH = 40
 CONNECTION_SIZE = 5
 HANDLE = 140
 POSTFIX = 10
+KERF = -0.04
 
 def readProfile(profileFile):
     points = []
@@ -105,6 +106,82 @@ def drawTally(dwg, spline, n, size, twist, center=[0, 0]):
             y += 1.4 * size
     return
 
+def drawBeam(dwg, blades):
+    g = dwg.g(id='beam')
+    x = HANDLE
+    y = 0
+    points = [(0, BEAM_WIDTH), (0, 0)]
+    prev = 0
+    bladez = deepcopy(blades)
+    while len(bladez) > 0:
+        b = bladez.pop(0)
+        diff = b.pos - prev
+        prev = b.pos
+        if x + diff - RIB_WIDTH/2 < 800:
+            x += diff - RIB_WIDTH/2
+            points.append((x, y))
+            y += CONNECTION_SIZE
+            points.append((x, y))
+            x += RIB_WIDTH  
+            points.append((x, y))
+            y -= CONNECTION_SIZE
+            points.append((x, y))
+        else:
+            # first part of dovetail
+            half = (diff - RIB_WIDTH/2) - 20
+            x += 20
+            points.append((x, y))
+            y += BEAM_WIDTH/3
+            points.append((x, y))
+            x -= BEAM_WIDTH
+            y -= BEAM_WIDTH/6
+            points.append((x, y))
+            y += BEAM_WIDTH * 2/3
+            points.append((x, y))
+            x += BEAM_WIDTH
+            y -= BEAM_WIDTH/6
+            points.append((x, y))
+            y += BEAM_WIDTH/3
+            points.append((x, y))
+            x = 0
+            points.append((x, y))
+            y -= BEAM_WIDTH
+            points.append((x, y))
+            g.add(dwg.polyline(points, fill='none', stroke='green', stroke_width=1))
+
+            # second part of dovetail
+            y += 10 + BEAM_WIDTH*2
+            points = [(x, y)]
+            y -= BEAM_WIDTH/3
+            points.append((x, y))
+            x -= BEAM_WIDTH
+            y += BEAM_WIDTH/6
+            points.append((x, y))
+            y -= BEAM_WIDTH  * 2/3
+            points.append((x, y))
+            x += BEAM_WIDTH
+            y += BEAM_WIDTH/6
+            points.append((x, y))
+            y -= BEAM_WIDTH/3
+            points.append((x, y))
+            x += half
+            points.append((x, y))
+            y += CONNECTION_SIZE
+            points.append((x, y))
+            x += RIB_WIDTH  
+            points.append((x, y))
+            y -= CONNECTION_SIZE
+            points.append((x, y))
+
+    x += POSTFIX
+    points.append((x, y))
+    y += BEAM_WIDTH
+    points.append((x, y))
+    x = 0
+    points.append((x, y))
+    g.add(dwg.polyline(points, fill='none', stroke='green', stroke_width=1))
+    return g
+
 def main(): 
     # Create Ribs
     dwg = svgwrite.Drawing('ribs.svg', profile='tiny')
@@ -138,24 +215,16 @@ def main():
 
     # Create Main Beam
     dwg = svgwrite.Drawing('beam.svg', profile='tiny')
-    g = dwg.g(id='beam')
-    points = [(0, 0)]
-    for b in blade:
-        points.append((HANDLE + b.pos - RIB_WIDTH/2, 0))
-        points.append((HANDLE + b.pos - RIB_WIDTH/2, CONNECTION_SIZE))
-        points.append((HANDLE + b.pos + RIB_WIDTH/2, CONNECTION_SIZE))
-        points.append((HANDLE + b.pos + RIB_WIDTH/2, 0))
-    points.append((HANDLE + blade[-1].pos + POSTFIX, 0))
-    points.append((HANDLE + blade[-1].pos + POSTFIX, BEAM_WIDTH))
-    points.append((0, BEAM_WIDTH))
-    points.append((0, 0))
-    g.add(dwg.polyline(points, fill='none', stroke='green', stroke_width=1))
+    beamgroup = drawBeam(dwg, blade)
+    beamgroup.translate(50, 20)
+    #dwg.add(beamgroup)
 
     # Create connectors
-    points = [(0, 0), (RIB_WIDTH + 6, 0), (RIB_WIDTH + 6, CONNECTION_SIZE), (3, CONNECTION_SIZE), (3, CONNECTION_SIZE + 3), (0, CONNECTION_SIZE + 3), (0, 0)]
+    g = dwg.g(id='connectors')
+    points = [(0, 0), (RIB_WIDTH + 6, 0), (RIB_WIDTH + 6, CONNECTION_SIZE - 20*KERF), (3, CONNECTION_SIZE - 20*KERF), (3, CONNECTION_SIZE + 3), (0, CONNECTION_SIZE + 3), (0, 0)]
     for i in range(len(blade)):
         obj = dwg.polyline(points, fill='none', stroke='green', stroke_width=1)
-        obj.translate(20 * i, BEAM_WIDTH + 10)
+        obj.translate(20 * i)
         g.add(obj)
     dwg.add(g)
     dwg.save()
@@ -187,7 +256,7 @@ def main():
     g.add(dwg.polyline(points, fill='none', stroke='green', stroke_width=1))
 
     # Add one connector
-    points = [(0, 0), (RIB_WIDTH + 6, 0), (RIB_WIDTH + 6, CONNECTION_SIZE), (3, CONNECTION_SIZE), (3, CONNECTION_SIZE + 3), (0, CONNECTION_SIZE + 3), (0, 0)]
+    points = [(0, 0), (RIB_WIDTH + 6, 0), (RIB_WIDTH + 6, CONNECTION_SIZE - 8*KERF), (3, CONNECTION_SIZE - 8*KERF), (3, CONNECTION_SIZE + 3), (0, CONNECTION_SIZE + 3), (0, 0)]
     obj = dwg.polyline(points, fill='none', stroke='green', stroke_width=1)
     obj.translate(0, BEAM_WIDTH + 10)
     g.add(obj)
